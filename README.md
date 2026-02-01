@@ -2,9 +2,12 @@
 
 A comprehensive, interactive 30-day study roadmap to master JavaScript fundamentals and React development. Built with React + Vite.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000?logo=vercel&logoColor=white)](https://frontend-master-omega.vercel.app)
 ![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7.2-646CFF?logo=vite&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript&logoColor=black)
+
+🔗 **Live Demo:** [frontend-master-omega.vercel.app](https://frontend-master-omega.vercel.app)
 
 ## 📖 Overview
 
