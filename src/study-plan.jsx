@@ -1,5 +1,7 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const STORAGE_KEY = "studyPlanCompletedDays";
 
 const studyData = [
   // --- Phase 1: JS Core (Days 1–10) ---
@@ -267,8 +269,24 @@ const phaseColors = {
 
 export default function StudyPlan() {
   const [selectedDay, setSelectedDay] = useState(null);
-  const [completedDays, setCompletedDays] = useState(new Set());
+  const [completedDays, setCompletedDays] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
   const [activePhase, setActivePhase] = useState(null);
+  const [copiedTopic, setCopiedTopic] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedDays]));
+  }, [completedDays]);
+
+  const copyToClipboard = (text, e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedTopic(text);
+      setTimeout(() => setCopiedTopic(null), 1500);
+    });
+  };
 
   const toggleComplete = (day, e) => {
     e.stopPropagation();
@@ -402,24 +420,52 @@ export default function StudyPlan() {
               <div key={item.day}>
                 {/* Phase Divider */}
                 {isPhaseStart && (
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: "12px",
-                    marginTop: idx === 0 ? 0 : "28px", marginBottom: "12px"
-                  }}>
-                    <div style={{ flex: 1, height: "1px", background: "#222" }} />
-                    <span style={{
-                      fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase",
-                      color: color.light, fontFamily: "monospace", fontWeight: "600"
-                    }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      marginTop: idx === 0 ? 0 : "28px",
+                      marginBottom: "12px",
+                    }}
+                  >
+                    <div
+                      style={{ flex: 1, height: "1px", background: "#222" }}
+                    />
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        letterSpacing: "3px",
+                        textTransform: "uppercase",
+                        color: color.light,
+                        fontFamily: "monospace",
+                        fontWeight: "600",
+                      }}
+                    >
                       Phase {item.phase} — {phaseNames[item.phase]}
                     </span>
-                    <div style={{
-                      fontSize: "9px", color: color.light, fontFamily: "monospace",
-                      background: `${color.light}15`, padding: "2px 8px", borderRadius: "10px", border: `1px solid ${color.light}30`
-                    }}>
-                      Days {studyData.filter(d => d.phase === item.phase)[0].day}–{studyData.filter(d => d.phase === item.phase).slice(-1)[0].day}
+                    <div
+                      style={{
+                        fontSize: "9px",
+                        color: color.light,
+                        fontFamily: "monospace",
+                        background: `${color.light}15`,
+                        padding: "2px 8px",
+                        borderRadius: "10px",
+                        border: `1px solid ${color.light}30`,
+                      }}
+                    >
+                      Days{" "}
+                      {studyData.filter((d) => d.phase === item.phase)[0].day}–
+                      {
+                        studyData
+                          .filter((d) => d.phase === item.phase)
+                          .slice(-1)[0].day
+                      }
                     </div>
-                    <div style={{ flex: 1, height: "1px", background: "#222" }} />
+                    <div
+                      style={{ flex: 1, height: "1px", background: "#222" }}
+                    />
                   </div>
                 )}
 
@@ -427,92 +473,224 @@ export default function StudyPlan() {
                 <div
                   onClick={() => setSelectedDay(isOpen ? null : item.day)}
                   style={{
-                    background: isOpen ? "#1e1e2a" : isDone ? "#151518" : "#14141a",
+                    background: isOpen
+                      ? "#1e1e2a"
+                      : isDone
+                        ? "#151518"
+                        : "#14141a",
                     border: `1px solid ${isOpen ? color.light + "40" : isDone ? "#2a2a2a" : "#1e1e1e"}`,
-                    borderRadius: "12px", cursor: "pointer", overflow: "hidden",
-                    transition: "all 0.25s ease", position: "relative"
+                    borderRadius: "12px",
+                    cursor: "pointer",
+                    overflow: "hidden",
+                    transition: "all 0.25s ease",
+                    position: "relative",
                   }}
                 >
                   {/* Top accent line */}
-                  <div style={{
-                    height: "2px", background: isDone ? "#2a2a2a" : `linear-gradient(90deg, ${color.light}, transparent)`,
-                    opacity: isOpen || !isDone ? 1 : 0.4
-                  }} />
+                  <div
+                    style={{
+                      height: "2px",
+                      background: isDone
+                        ? "#2a2a2a"
+                        : `linear-gradient(90deg, ${color.light}, transparent)`,
+                      opacity: isOpen || !isDone ? 1 : 0.4,
+                    }}
+                  />
 
                   {/* Main row */}
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: "16px",
-                    padding: "14px 18px"
-                  }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "16px",
+                      padding: "14px 18px",
+                    }}
+                  >
                     {/* Checkbox */}
                     <div
                       onClick={(e) => toggleComplete(item.day, e)}
                       style={{
-                        width: "22px", height: "22px", borderRadius: "6px", flexShrink: 0,
+                        width: "22px",
+                        height: "22px",
+                        borderRadius: "6px",
+                        flexShrink: 0,
                         border: `2px solid ${isDone ? color.light : "#444"}`,
                         background: isDone ? color.light : "transparent",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        cursor: "pointer", transition: "all 0.2s ease"
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
                       }}
                     >
                       {isDone && (
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path d="M2 6L5 9L10 3" stroke="#0a0a0f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                        >
+                          <path
+                            d="M2 6L5 9L10 3"
+                            stroke="#0a0a0f"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
                         </svg>
                       )}
                     </div>
 
                     {/* Day badge */}
-                    <div style={{
-                      width: "38px", height: "38px", borderRadius: "8px",
-                      background: isDone ? "#1f1f1f" : `${color.light}12`,
-                      border: `1px solid ${isDone ? "#333" : `${color.light}25`}`,
-                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0
-                    }}>
-                      <span style={{ fontSize: "8px", color: isDone ? "#555" : color.light, fontFamily: "monospace", lineHeight: 1 }}>DAY</span>
-                      <span style={{ fontSize: "14px", fontWeight: "300", color: isDone ? "#666" : "#fff", lineHeight: 1.4 }}>{item.day}</span>
+                    <div
+                      style={{
+                        width: "38px",
+                        height: "38px",
+                        borderRadius: "8px",
+                        background: isDone ? "#1f1f1f" : `${color.light}12`,
+                        border: `1px solid ${isDone ? "#333" : `${color.light}25`}`,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "8px",
+                          color: isDone ? "#555" : color.light,
+                          fontFamily: "monospace",
+                          lineHeight: 1,
+                        }}
+                      >
+                        DAY
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "300",
+                          color: isDone ? "#666" : "#fff",
+                          lineHeight: 1.4,
+                        }}
+                      >
+                        {item.day}
+                      </span>
                     </div>
 
                     {/* Title + Topics Preview */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontSize: "15px", fontWeight: isDone ? "300" : "400", color: isDone ? "#555" : "#eee",
-                        textDecoration: isDone ? "line-through" : "none", whiteSpace: "nowrap",
-                        overflow: "hidden", textOverflow: "ellipsis", transition: "color 0.2s"
-                      }}>
+                      <div
+                        style={{
+                          fontSize: "15px",
+                          fontWeight: isDone ? "300" : "400",
+                          color: isDone ? "#555" : "#eee",
+                          textDecoration: isDone ? "line-through" : "none",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          transition: "color 0.2s",
+                        }}
+                      >
                         {item.title}
                       </div>
                       {!isOpen && (
-                        <div style={{ fontSize: "11px", color: "#444", marginTop: "3px", fontFamily: "monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        <div
+                          style={{
+                            fontSize: "11px",
+                            color: "#444",
+                            marginTop: "3px",
+                            fontFamily: "monospace",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
                           {item.topics.join(" · ")}
                         </div>
                       )}
                     </div>
 
                     {/* Expand icon */}
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{
-                      transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s ease", flexShrink: 0
-                    }}>
-                      <path d="M4 6L8 10L12 6" stroke="#555" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      style={{
+                        transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.25s ease",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <path
+                        d="M4 6L8 10L12 6"
+                        stroke="#555"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   </div>
 
                   {/* Expanded Detail */}
                   {isOpen && (
-                    <div style={{ padding: "0 18px 20px 18px", borderTop: "1px solid #222", paddingTop: "18px" }}>
+                    <div
+                      style={{
+                        padding: "0 18px 20px 18px",
+                        borderTop: "1px solid #222",
+                        paddingTop: "18px",
+                      }}
+                    >
                       {/* Topics */}
                       <div style={{ marginBottom: "16px" }}>
-                        <div style={{ fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", color: color.light, fontFamily: "monospace", marginBottom: "10px" }}>
-                          Topics
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            letterSpacing: "2px",
+                            textTransform: "uppercase",
+                            color: color.light,
+                            fontFamily: "monospace",
+                            marginBottom: "10px",
+                          }}
+                        >
+                          Topics{" "}
+                          <span style={{ color: "#555", fontSize: "9px" }}>
+                            (click to copy)
+                          </span>
                         </div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "6px",
+                          }}
+                        >
                           {item.topics.map((t, i) => (
-                            <span key={i} style={{
-                              fontSize: "12px", color: "#bbb", background: "#1a1a22", border: "1px solid #2a2a2a",
-                              padding: "5px 10px", borderRadius: "6px", fontFamily: "monospace"
-                            }}>
-                              {t}
+                            <span
+                              key={i}
+                              onClick={(e) => copyToClipboard(t, e)}
+                              style={{
+                                fontSize: "12px",
+                                color: copiedTopic === t ? "#61dafb" : "#bbb",
+                                background:
+                                  copiedTopic === t
+                                    ? "rgba(97,218,251,0.15)"
+                                    : "#1a1a22",
+                                border:
+                                  copiedTopic === t
+                                    ? "1px solid #61dafb"
+                                    : "1px solid #2a2a2a",
+                                padding: "5px 10px",
+                                borderRadius: "6px",
+                                fontFamily: "monospace",
+                                cursor: "pointer",
+                                transition: "all 0.2s ease",
+                                position: "relative",
+                              }}
+                              title="Click to copy"
+                            >
+                              {copiedTopic === t ? "✓ Copied!" : t}
                             </span>
                           ))}
                         </div>
@@ -520,26 +698,65 @@ export default function StudyPlan() {
 
                       {/* Practice */}
                       <div style={{ marginBottom: "16px" }}>
-                        <div style={{ fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", color: "#f39c12", fontFamily: "monospace", marginBottom: "8px" }}>
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            letterSpacing: "2px",
+                            textTransform: "uppercase",
+                            color: "#f39c12",
+                            fontFamily: "monospace",
+                            marginBottom: "8px",
+                          }}
+                        >
                           🎯 Practice Project
                         </div>
-                        <p style={{ fontSize: "13px", color: "#aaa", margin: 0, lineHeight: 1.5, fontFamily: "monospace" }}>
+                        <p
+                          style={{
+                            fontSize: "13px",
+                            color: "#aaa",
+                            margin: 0,
+                            lineHeight: 1.5,
+                            fontFamily: "monospace",
+                          }}
+                        >
                           {item.practice}
                         </p>
                       </div>
 
                       {/* Resources */}
                       <div>
-                        <div style={{ fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", color: "#61dafb", fontFamily: "monospace", marginBottom: "8px" }}>
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            letterSpacing: "2px",
+                            textTransform: "uppercase",
+                            color: "#61dafb",
+                            fontFamily: "monospace",
+                            marginBottom: "8px",
+                          }}
+                        >
                           📚 Resources
                         </div>
-                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            flexWrap: "wrap",
+                          }}
+                        >
                           {item.resources.map((r, i) => (
-                            <span key={i} style={{
-                              fontSize: "11px", color: "#61dafb", background: "rgba(97,218,251,0.08)",
-                              border: "1px solid rgba(97,218,251,0.2)", padding: "4px 10px",
-                              borderRadius: "4px", fontFamily: "monospace"
-                            }}>
+                            <span
+                              key={i}
+                              style={{
+                                fontSize: "11px",
+                                color: "#61dafb",
+                                background: "rgba(97,218,251,0.08)",
+                                border: "1px solid rgba(97,218,251,0.2)",
+                                padding: "4px 10px",
+                                borderRadius: "4px",
+                                fontFamily: "monospace",
+                              }}
+                            >
                               {r}
                             </span>
                           ))}
